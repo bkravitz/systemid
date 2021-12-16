@@ -1,0 +1,17 @@
+Instructions for system identification
+Ben Kravitz
+Last updated 20 September 2018
+
+In my home directory (~krav432) on sooty, in the folder CESM_runs, there should be a bunch of folders mods_sysid_...  Pick one of them.  The code should be the same in all of them.  Each should have three files that I've modified (ignore the temporary files with ~ at the end).  You can do a search for the modifications either by comparing to the original files in your source directory (cd ~/CAM; find . -name camsrfexch.F90 as an example, and then do a diff command) or doing a search for "Ben" in the files.
+
+- atm_comp_mct.F90 is a coupler file.  I used this one to add some variables (you have to declare all variables in FORTRAN) and add an mpibarrier call, which you need in multi-processor code to tell all of the processors to wait until the thing in the code is caught up.  The reason you do this is because if the processors don't wait, they start broadcasting and exchanging information amongst themselves, so if the variable you're initializing isn't fully populated, they broadcast garbage.
+- camsrfexch.F90 is mostly used for initializing the variables declared in atm_comp_mct.F90.  However, there is one hard-coded variable on line 128 that will need to be modified.
+- cam_comp.F90 is where all of the work is actually done.  A lot of numbers in here are hard-coded, which we'll get to.  The main work is a block of code that reads in the system ID binary file.
+
+When you create a new case, before you compile (csh ./casename), you'll want to create a folder in CESM_runs called mods_<casename>.  Then copy the three FORTRAN files into that mods folder.  Then you'll need to edit them before you compile the code.
+
+In terms of code modifications, I think the only things you'll need to modify are some numbers.  13824=144*96, which is the f19_g16 resolution (approximately 2 degrees).  You won't need to change the numbers 13824, 144, or 96 (number of grid cells, number of longitudes, and number of latitudes, respectively) in any of the code.  Although I'm noticing some code bugs, so please make sure everything makes sense before you compile.  (I'm happy to take a look.)  There should also be another few numbers:  1825/1830 or 7300/7305.  These relate to the lengths of the input sequences, i.e., the number of days you want to add/subtract temperature.  The extra 5 is for the header information, which I talked about in a different tutorial file.  We should first talk about sequence length (number of days), and then we can adjust that as appropriate.
+
+After you're done with that, you'll want to compile your code.  It will create a new directory for you:  /lustre/suth827/csmruns/runs/<casename>/run/.  You should put the binary file named sysidout.bin (again, see other tutorial) into that directory.  Make sure it's named exactly that because the name is hard-coded, and the model will crash if it doesn't find that file.
+
+In terms of the sequences you generate, including amplitude, which region, etc., all of that is taken care of in the binary input file.  So the model code in general should be exactly the same for everything, unless you're changing the length of the input sequence.  With some clever matlab, we can also set up the binary file to contain a discretized sinusoid.  The files that are 144x96x7305 are about 400 MB in size.  I usually create them on my computer and then upload them via sftp, but you can also create them on sooty using matlab there (once you have access).
