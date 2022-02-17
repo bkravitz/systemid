@@ -1,4 +1,4 @@
-Copyright (c) 2021, Bethany Sutherland and Ben Kravitz
+Copyright (c) 2022, Bethany Sutherland and Ben Kravitz
 
 This software package is governed by the GNU GENERAL PUBLIC LICENSE (copy is provided).
 
